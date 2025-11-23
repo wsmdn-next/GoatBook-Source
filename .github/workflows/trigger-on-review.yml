@@ -1,5 +1,5 @@
 # .github/workflows/trigger-on-review.yml
-name: Trigger on Review
+name: tor
 on:
   pull_request_review:
     types: [submitted]
