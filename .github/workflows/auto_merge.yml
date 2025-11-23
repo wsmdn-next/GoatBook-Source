@@ -6,8 +6,6 @@ on:
       - unlabeled
       - synchronize
       - opened
-  pull_request_target:
-    types:
       - submitted
   check_suite:
     types:
