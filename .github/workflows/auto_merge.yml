@@ -7,8 +7,9 @@ on:
       - synchronize
       - opened
   workflow_run:
-    workflows: ["Trigger on Review"]
-    types: [completed]
+    workflows: [tor]
+    types: 
+      - completed
   check_suite:
     types:
       - completed
