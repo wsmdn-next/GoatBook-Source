@@ -20,10 +20,12 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Set PAT environment variable
+        run: echo "PAT=${{ secrets.BOT_TOKEN }}" >> $GITHUB_ENV
       - name: automerge
         uses: "pascalgn/automerge-action@v0.16.4"
         env:
-          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
+          GITHUB_TOKEN: "${{ env.PAT }}"
           MERGE_LABELS: "auto merge"
           MERGE_METHOD: "squash"
           MERGE_COMMIT_MESSAGE: "automatic"
