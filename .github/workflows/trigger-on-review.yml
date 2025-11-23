@@ -1,0 +1,11 @@
+# .github/workflows/trigger-on-review.yml
+name: Trigger on Review
+on:
+  pull_request_review:
+    types: [submitted]
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Auto Merge
+        run: echo "PR reviewed - this will trigger the main workflow"
