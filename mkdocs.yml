@@ -45,7 +45,7 @@ plugins:
       lang: ['zh']
       # 明确指定中文语言
 extra_css:
- - extra.css
+ - /extra.css
 
 markdown_extensions:
   - pymdownx.tabbed
