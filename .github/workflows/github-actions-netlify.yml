@@ -62,26 +62,42 @@ jobs:
       - name: Get Commit Info
         id: commit_info
         run: |
-          # 获取最新一次提交的短哈希值（例如：a1b2c3d）
+          # 获取最新一次提交的短哈希值和标题，用于 Release 的名称和标识
           COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)
-          # 获取最新一次提交的标题
           COMMIT_SUBJECT=$(git log -1 --pretty=format:"%s")
           
-          # 将这些信息设置为输出，供后续步骤使用
           echo "short_sha=$COMMIT_SHORT_SHA" >> $GITHUB_OUTPUT
           echo "subject=$COMMIT_SUBJECT" >> $GITHUB_OUTPUT
       
       - name: Generate Changelog
         id: changelog
-        # 使用上一步获取的提交标题
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "## 最新提交" >> $GITHUB_STEP_SUMMARY
-          echo "- ${{ steps.commit_info.outputs.subject }}" >> $GITHUB_STEP_SUMMARY
+          # 1. 获取上一个 Release 的 tag
+          PREV_TAG=$(gh release view --repo ${{ github.repository }} --exclude-pre-releases --json tagName --query '.tagName' || echo "null")
           
+          # 2. 生成变更日志
+          echo "## 变更日志" >> $GITHUB_STEP_SUMMARY
+          
+          # 如果找到了上一个 Release tag
+          if [[ "$PREV_TAG" != "null" && -n "$PREV_TAG" ]]; then
+            echo "### 与 $PREV_TAG 相比:" >> $GITHUB_STEP_SUMMARY
+            # 使用 gh api 比较两个 commit/tag 之间的差异
+            # --jq 过滤出提交信息，并格式化为列表
+            gh api repos/${{ github.repository }}/compare/$PREV_TAG...HEAD --jq '.commits | .[] | "- \(.message)"' >> $GITHUB_STEP_SUMMARY
+          else
+            # 如果没有找到上一个 Release，说明这是第一次发布
+            echo "### 首次发布，包含所有历史提交:" >> $GITHUB_STEP_SUMMARY
+            gh api repos/${{ github.repository }}/commits --jq '.[] | "- \(.commit.message)"' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # 3. 将生成的变更日志保存到输出变量
           CHANGELOG=$(cat $GITHUB_STEP_SUMMARY)
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
             
       - name: Create GitHub Release & Upload Assets
         uses: softprops/action-gh-release@v1
